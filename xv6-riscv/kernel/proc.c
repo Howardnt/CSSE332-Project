@@ -325,6 +325,9 @@ fork(void)
   return pid;
 }
 
+
+
+
 // Pass p's abandoned children to init.
 // Caller must hold wait_lock.
 void
@@ -689,15 +692,71 @@ spoon(void *arg)
   return 0;
 }
 
-int
-thread_create(void* addr, void* func, void* args) 
-{
-  printf("This call has not been implemented yet!\n");
-  printf("Called with addr = %p,  func = %p, args = %p\n", addr, func, args);
-  return 0;
-}
+
+
+// our thread implementation
+// create thread 
+typedef void (*thread_func_t)(void *);
+typedef int thread_struct;
 
 int
+create_thread_internal(thread_struct *ts, thread_func_t fn, void *arg)
+{
+
+  printf("create thread internal called");
+  printf("Called with addr = %p fn = %p arg = %p\n", addr, fn, arg);
+  int i, pid;
+  struct proc *np;
+  struct proc *p = myproc();
+
+  // Allocate process. // same as fork
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+
+  // Copy user memory from parent to child. // same as fork
+  if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+    freeproc(np);
+    release(&np->lock);
+    return -1;
+  }
+  np->sz = p->sz; // ???
+
+  // copy saved user registers.
+  *(np->trapframe) = *(p->trapframe);
+
+  // Cause fork to return 0 in the child.
+  np->trapframe->a0 = (uint64)arg; // changed
+  np->trapframe->sp = (uint64)0; // change stack pointer // TODO double check
+  np->trapframe->epc = (uint64)fn; // change pc // TODO double check
+
+
+  // increment reference counts on open file descriptors.
+  for(i = 0; i < NOFILE; i++)
+    if(p->ofile[i])
+      np->ofile[i] = filedup(p->ofile[i]);
+  np->cwd = idup(p->cwd);
+
+  safestrcpy(np->name, p->name, sizeof(p->name));
+
+  pid = np->pid;
+
+  release(&np->lock);
+
+  acquire(&wait_lock);
+  np->parent = p;
+  release(&wait_lock);
+
+  acquire(&np->lock);
+  np->state = RUNNABLE;
+  release(&np->lock);
+
+  *ts = pid;
+  return 0; // no error
+}
+
+ int
 thread_combine(void* addr)
 {
   printf("This call has not been implemented yet!\n");
