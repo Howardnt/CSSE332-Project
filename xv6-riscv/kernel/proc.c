@@ -734,7 +734,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   uint64 stack_top = (uint64)(kalloc()+PGSIZE);
   int err = mappages(np->pagetable, PGROUNDDOWN(np->trapframe->sp), PGSIZE, stack_top-PGSIZE, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
   printf("err: %d\n", err);
-//  np->trapframe->sp = PGROUNDDOWN(np->trapframe->sp); // change stack pointer // TODO double check
+  np->trapframe->sp = PGROUNDUP(np->trapframe->sp); // change stack pointer // TODO double check
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
 
 
