@@ -779,7 +779,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   printf("END\n");
   pid = pid;
-  //*ts = pid;
+  copyout(p->pagetable, (uint64)ts, (char *)&pid, sizeof(pid));
   return 0; // no error
 }
 
