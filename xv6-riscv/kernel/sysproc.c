@@ -88,13 +88,14 @@ sys_spoon(void)
 uint64
 sys_thread_create(void)
 {
-  uint64 addr, func, args;
+  uint64 ts, fn, args;
   
-  argaddr(0, &addr);
-  argaddr(1, &func);
+  argaddr(0, &ts);
+  argaddr(1, &fn);
   argaddr(2, &args);
+  printf("%p %p %p\n", ts, fn, args);
 
-  return thread_create((void*)addr, (void*)func, (void*)args);
+  return thread_create((thread_struct_t *)ts, (thread_func_t)fn, (void*)args);
 }
 
 uint64

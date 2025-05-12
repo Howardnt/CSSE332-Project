@@ -696,15 +696,17 @@ spoon(void *arg)
 
 // our thread implementation
 // create thread 
-typedef void (*thread_func_t)(void *);
-typedef int thread_struct;
+//
+// These are now in defs.h (should they be???)
+//typedef void (*thread_func_t)(void *);
+//typedef int thread_struct_t;
 
 int
-create_thread_internal(thread_struct *ts, thread_func_t fn, void *arg)
+thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 {
 
-  printf("create thread internal called");
-  printf("Called with addr = %p fn = %p arg = %p\n", addr, fn, arg);
+  printf("create thread called\n");
+  printf("Called with ts = %p fn = %p arg = %p\n", ts, fn, arg);
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
@@ -728,7 +730,11 @@ create_thread_internal(thread_struct *ts, thread_func_t fn, void *arg)
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = (uint64)arg; // changed
-  np->trapframe->sp = (uint64)0; // change stack pointer // TODO double check
+  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
+  uint64 stack_top = (uint64)(kalloc()+PGSIZE);
+  int err = mappages(np->pagetable, PGROUNDDOWN(np->trapframe->sp), PGSIZE, stack_top-PGSIZE, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
+  printf("err: %d\n", err);
+//  np->trapframe->sp = PGROUNDDOWN(np->trapframe->sp); // change stack pointer // TODO double check
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
 
 
@@ -752,14 +758,16 @@ create_thread_internal(thread_struct *ts, thread_func_t fn, void *arg)
   np->state = RUNNABLE;
   release(&np->lock);
 
-  *ts = pid;
+  printf("END\n");
+  pid = pid;
+  //*ts = pid;
   return 0; // no error
 }
 
- int
-thread_combine(void* addr)
+int
+thread_combine(thread_struct_t* ts)
 {
   printf("This call has not been implemented yet!\n");
-  printf("Called with addr = %p\n", addr);
+  printf("Called with addr = %p\n", ts);
   return 0;
 }

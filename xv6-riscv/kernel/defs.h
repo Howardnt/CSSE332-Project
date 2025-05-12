@@ -9,6 +9,11 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+
+typedef void (*thread_func_t)(void *);
+typedef int thread_struct_t;
+
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
@@ -107,8 +112,9 @@ int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 uint64          spoon(void*);
-int             thread_create(void* addr, void* func, void* args);
-int             thread_combine(void*);
+
+int 		thread_create(thread_struct_t *ts, thread_func_t fn, void *arg);
+int             thread_combine(thread_struct_t *ts);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

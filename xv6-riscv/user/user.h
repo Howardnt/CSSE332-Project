@@ -23,7 +23,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int thread_create(void* addr, void* func, void* args);
+int thread_create(void* ts, void(*fn)(void *), void* args);
 int thread_combine(void*);
 
 // ulib.c
