@@ -748,9 +748,9 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   int stack_offset = PGSIZE+highest_stack_of_peers(p);
   int err = mappages(np->pagetable, stack_offset, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
   printf("err: %d\n", err);
-  np->trapframe->sp = stack_offset; // change stack pointer // T
+  np->trapframe->sp = stack_offset - 8; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
-
+  np->sz += PGSIZE;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -766,6 +766,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   acquire(&wait_lock);
   np->parent = p;
+
   // circular list  insertion
   struct proc *old_next = p->next_peer;
   p->next_peer = np;

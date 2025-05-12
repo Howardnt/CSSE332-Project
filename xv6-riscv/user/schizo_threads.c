@@ -64,9 +64,8 @@ int test2() {
 }
 
 void test_fn_3(void *arg) {
-  sleep(20);
+  sleep(2 * *((int *)arg));
   printf("(chilled) thread_num: %d pid: %d\n", *(int *)arg, getpid());
-  sleep(20);
   exit(0);
 }
 
@@ -104,6 +103,6 @@ int test4() {
 }
 
 int main() {
-  test3();
+  test2();
   return 0; // dummy main
 }
