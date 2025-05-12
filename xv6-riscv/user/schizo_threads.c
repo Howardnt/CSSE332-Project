@@ -18,13 +18,14 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
   return 1; // TODO
 }
 
-int sthread_join(sthread_t *thread) {
+int sthread_join(sthread_t thread) {
 // TODO note for next time
 // waitpid needed for joining
 //
 // need to check status for errors to return
 
-//  waitpid(*(thread->ts), );
+  // TODO check status so we can add retvals as feature
+//  waitpid(thread);
   return 0;
 }
 
@@ -78,6 +79,27 @@ int test3() {
     sthread_create(&ts[i], test_fn_3, &ids[i]);
     printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", i, (int)ts[i]);
   }
+  return 0;
+}
+
+// --------- t4
+int global = 0;
+void test_fn_4(void *arg) {
+  int add_to_global = *(int *)arg;
+  sleep(add_to_global);
+  global += add_to_global;
+  return;
+}
+
+int test4() {
+  sthread_t t1;
+  sthread_t t2;
+  int add1 = 14;
+  int add2 = 23;
+  sthread_create(&t1, test_fn_4, &add1);
+  sthread_create(&t2, test_fn_4, &add2);
+  sleep(100);
+  printf("%d\n", global);
   return 0;
 }
 
