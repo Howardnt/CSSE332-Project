@@ -124,8 +124,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->peers = kalloc(); // alloc entire page for one number (TODO really stupid pls fix) // for threads this is wasted
-  p->peers[0] = 1;
+  p->next_peer = p;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -696,6 +695,18 @@ spoon(void *arg)
 
 
 
+uint64 highest_stack_of_peers(struct proc *p) {
+  uint64 highest = PGROUNDDOWN(p->trapframe->sp);
+  for (struct proc *cur = p->next_peer; cur != p; cur = cur->next_peer) {
+    uint64 pot = PGROUNDDOWN(cur->trapframe->sp);
+    if (pot > highest) highest = pot;
+  }
+  return highest;
+}
+
+
+
+
 // our thread implementation
 // create thread 
 //
@@ -703,12 +714,11 @@ spoon(void *arg)
 //typedef void (*thread_func_t)(void *);
 //typedef int thread_struct_t;
 
+
 int
 thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 {
 
-  printf("create thread called\n");
-  printf("Called with ts = %p fn = %p arg = %p\n", ts, fn, arg);
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
@@ -734,9 +744,11 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   np->trapframe->a0 = (uint64)arg; // changed
 //  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
   uint64 stack_bottom_pa = (uint64)kalloc();
-  int err = mappages(np->pagetable, PGROUNDDOWN(np->trapframe->sp)+PGSIZE, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
+
+  int stack_offset = PGSIZE+highest_stack_of_peers(p);
+  int err = mappages(np->pagetable, stack_offset, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
   printf("err: %d\n", err);
-  np->trapframe->sp = PGROUNDUP(np->trapframe->sp)+PGSIZE*p->existing_children; // change stack pointer // TODO double check
+  np->trapframe->sp = stack_offset; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
 
 
@@ -748,13 +760,17 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
-  p->existing_children++; // ADDED BY US
   pid = np->pid;
 
   release(&np->lock);
 
   acquire(&wait_lock);
   np->parent = p;
+  // circular list  insertion
+  struct proc *old_next = p->next_peer;
+  p->next_peer = np;
+  np->next_peer = old_next;
+
   release(&wait_lock);
 
   acquire(&np->lock);
@@ -766,6 +782,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   //*ts = pid;
   return 0; // no error
 }
+
 
 int
 thread_combine(thread_struct_t* ts)

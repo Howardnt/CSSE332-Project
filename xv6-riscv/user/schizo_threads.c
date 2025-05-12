@@ -37,7 +37,6 @@ void test_fn_1(void *arg) {
 
 int test1() {
   printf("parrot alive\n");
-  printf("child should exec at %p\n", test_fn_1);
   sthread_t t1;
   int local = 1234;
   sthread_create(&t1, test_fn_1, &local);
@@ -45,7 +44,26 @@ int test1() {
   return 0;
 }
 
+void test_fn_2(void *arg) {
+  int a = 10*(*(int*)arg);
+  sleep(a);
+  printf("thread %d ended\n", a);
+  sleep(100-a);
+  exit(0);
+}
+
+int test2() {
+  sthread_t t1;
+  sthread_t t2;
+  int id1 = 3;
+  int id2 = 5;
+  sthread_create(&t1, test_fn_2, &id1);
+  sleep(0.5);
+  sthread_create(&t2, test_fn_2, &id2);
+  return 0;
+}
+
 int main() {
-  test1();
+  test2();
   return 0; // dummy main
 }
