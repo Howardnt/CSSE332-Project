@@ -124,6 +124,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->peers = kalloc(); // alloc entire page for one number (TODO really stupid pls fix) // for threads this is wasted
+  p->peers[0] = 1;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -730,11 +732,11 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = (uint64)arg; // changed
-  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
-  uint64 stack_top = (uint64)(kalloc()+PGSIZE);
-  int err = mappages(np->pagetable, PGROUNDDOWN(np->trapframe->sp), PGSIZE, stack_top-PGSIZE, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
+//  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
+  uint64 stack_bottom_pa = (uint64)kalloc();
+  int err = mappages(np->pagetable, PGROUNDDOWN(np->trapframe->sp)+PGSIZE, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
   printf("err: %d\n", err);
-  np->trapframe->sp = PGROUNDUP(np->trapframe->sp); // change stack pointer // TODO double check
+  np->trapframe->sp = PGROUNDUP(np->trapframe->sp)+PGSIZE*p->existing_children; // change stack pointer // TODO double check
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
 
 
@@ -746,6 +748,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
+  p->existing_children++; // ADDED BY US
   pid = np->pid;
 
   release(&np->lock);

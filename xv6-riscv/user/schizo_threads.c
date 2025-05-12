@@ -28,9 +28,9 @@ int sthread_join(sthread_t *thread) {
   return 0;
 }
 
-void test_fn_1(void *no_arg) {
+void test_fn_1(void *arg) {
   sleep(1);
-  printf("thread_called\n");
+  printf("thread_called w/ %d\n", *(int *)arg);
   exit(1);
 //  return;
 }
@@ -39,7 +39,8 @@ int test1() {
   printf("parrot alive\n");
   printf("child should exec at %p\n", test_fn_1);
   sthread_t t1;
-  sthread_create(&t1, test_fn_1, 0);
+  int local = 1234;
+  sthread_create(&t1, test_fn_1, &local);
   printf("parrot alive\n");
   return 0;
 }
