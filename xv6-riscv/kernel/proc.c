@@ -791,11 +791,11 @@ int
 thread_combine(thread_struct_t *ts)
 {
   struct proc *pp;
-  int havekids, pid;
+  int havekids, pid, tpid;
   struct proc *p = myproc();
 
-  copyin(p->pagetable, (char *)&pid, (uint64)ts, sizeof(pid));
-  printf("combining on %d\n", pid);
+  copyin(p->pagetable, (char *)&tpid, (uint64)ts, sizeof(tpid));
+  printf("combining on %d\n", tpid);
 
   acquire(&wait_lock);
 
@@ -803,13 +803,14 @@ thread_combine(thread_struct_t *ts)
     // Scan through table looking for exited children.
     havekids = 0;
     for(pp = proc; pp < &proc[NPROC]; pp++){
-      if(pp->parent == p && pp->pid == pid) {
+      if(pp->parent == p && pp->pid == tpid) {
         printf("found it\n");
         // make sure the child isn't still in exit() or swtch().
         acquire(&pp->lock);
 
         havekids = 1;
         if(pp->state == ZOMBIE) {
+          pid = pp->pid;
           if(*ts != 0 && copyout(p->pagetable, *ts, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -819,6 +820,7 @@ thread_combine(thread_struct_t *ts)
           // freeproc(pp); // TODO do correctly
           release(&pp->lock);
           release(&wait_lock);
+          return pid;
         }
         release(&pp->lock);
       }
