@@ -18,15 +18,19 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
   return 1; // TODO
 }
 
-int sthread_join(sthread_t thread) {
+int sthread_join(sthread_t *thread) {
 // TODO note for next time
 // waitpid needed for joining
 //
 // need to check status for errors to return
 
   // TODO check status so we can add retvals as feature
-//  waitpid(thread);
-  return 0;
+  int err = thread_combine(thread); // (syscall)
+  if (err != 0){
+    printf("error: Encountered error calling thread combine %d\n", err);
+    return err;
+  }
+  return 1;
 }
 
 void test_fn_1(void *arg) {
@@ -49,7 +53,6 @@ void test_fn_2(void *arg) {
   int a = 10*(*(int*)arg);
   sleep(a);
   printf("thread %d ended\n", a);
-  sleep(100-a);
   exit(0);
 }
 
@@ -69,7 +72,7 @@ void test_fn_3(void *arg) {
   exit(0);
 }
 
-#define TEST_3_CNT 2
+#define TEST_3_CNT 10
 int test3() {
   sthread_t ts[TEST_3_CNT];
   int ids[TEST_3_CNT];
@@ -100,6 +103,21 @@ int test4() {
   sleep(100);
   printf("%d\n", global);
   return 0;
+}
+
+int test_fn_5(void *arg){
+    int a = *((int *)arg);
+    printf("%d\n", a);
+    return;
+}
+
+int test5() {
+    sthread_t t1;
+    int add = 12;
+    sthread_create(&t1, test_fn_5, &add);
+    sleep(10);
+    sthread_join(&t1);
+    return 0;
 }
 
 int main() {

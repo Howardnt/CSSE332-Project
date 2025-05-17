@@ -750,7 +750,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   printf("err: %d\n", err);
   np->trapframe->sp = stack_offset - 8; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
-  np->sz += PGSIZE;
+  np->sz += PGSIZE; //fix for milestone 3
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -779,16 +779,56 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   release(&np->lock);
 
   printf("END\n");
-  pid = pid;
   copyout(p->pagetable, (uint64)ts, (char *)&pid, sizeof(pid));
   return 0; // no error
 }
 
 
 int
-thread_combine(thread_struct_t* ts)
+thread_combine(thread_struct_t *ts)
 {
-  printf("This call has not been implemented yet!\n");
+  struct proc *pp;
+  int havekids, pid;
+  struct proc *p = myproc();
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&pp->lock);
+
+        havekids = 1;
+        if(pp->state == ZOMBIE && pp->pid == ts.pid){
+          // Found one.
+          pid = pp->pid;
+          if(*ts != 0 && copyout(p->pagetable, *ts, (char *)&pp->xstate,
+                                  sizeof(pp->xstate)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || killed(p)){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
   printf("Called with addr = %p\n", ts);
   return 0;
 }
