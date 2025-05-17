@@ -11,6 +11,7 @@ typedef void(*sthread_fn_in_t)(void *);
 
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
   int err = thread_create(thread, fn, args); // (syscall) 
+  printf("here\n");
   if (err != 0) {
     printf("error: Encountered error calling thread create %d\n", err);
     return err;
@@ -19,11 +20,6 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
 }
 
 int sthread_join(sthread_t *thread) {
-// TODO note for next time
-// waitpid needed for joining
-//
-// need to check status for errors to return
-
   // TODO check status so we can add retvals as feature
   int err = thread_combine(thread); // (syscall)
   if (err != 0){
@@ -107,7 +103,7 @@ int test4() {
 
 void test_fn_5(void *arg){
     printf("started\n");
-    sleep(100);
+    sleep(40);
     printf("ended\n");
     return;
 }
@@ -122,6 +118,6 @@ int test5() {
 }
 
 int main() {
-  test5();
+  test2();
   return 0; // dummy main
 }

@@ -729,19 +729,21 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   }
 
 
-  // Copy user memory from parent to child. // same as fork
-  if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
+   // Copy user memory from parent to child. // same as fork
+
+  
+  if (uvmcopy(p->pagetable, np->pagetable, p->sz) < 0) {
+    printf("copy_mappings failed");
     freeproc(np);
     release(&np->lock);
     return -1;
   }
   np->sz = p->sz; // ???
 
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
-  // Cause fork to return 0 in the child.
-  np->trapframe->a0 = (uint64)arg; // changed
 //  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
   uint64 stack_bottom_pa = (uint64)kalloc();
 
@@ -753,6 +755,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   }
   np->trapframe->sp = stack_offset - 8; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
+  np->trapframe->a0 = (uint64)arg; // change first argument to be arg
   np->sz += PGSIZE; //fix for milestone 3
 
   // increment reference counts on open file descriptors.
@@ -781,7 +784,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   np->state = RUNNABLE;
   release(&np->lock);
 
-  printf("END\n");
+  printf("END");
   copyout(p->pagetable, (uint64)ts, (char *)&pid, sizeof(pid));
   return 0; // no error
 }
@@ -812,15 +815,10 @@ thread_combine(thread_struct_t *ts)
         if(pp->state == ZOMBIE) {
           pid = pp->pid;
           pid = pid;
-          if(*ts != 0 && copyout(p->pagetable, *ts, (char *)&pp->xstate,
-                                  sizeof(pp->xstate)) < 0) {
-            release(&pp->lock);
-            release(&wait_lock);
-            return -1;
-          }
-          // freeproc(pp); // TODO do correctly
+         // freeproc(pp); // TODO do correctly
           release(&pp->lock);
           release(&wait_lock);
+
           return 0;
         }
         release(&pp->lock);
