@@ -75,7 +75,7 @@ int test3() {
   for (int i = 0; i < TEST_3_CNT; i++) {
     ids[i] = i+1;
     sthread_create(&ts[i], test_fn_3, &ids[i]);
-    printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", i, (int)ts[i]);
+    printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
   }
   return 0;
 }
@@ -118,6 +118,6 @@ int test5() {
 }
 
 int main() {
-  test2();
+  test3();
   return 0; // dummy main
 }

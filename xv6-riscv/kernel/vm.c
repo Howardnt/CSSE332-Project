@@ -14,6 +14,7 @@ pagetable_t kernel_pagetable;
 extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
+extern void count(uint64);
 
 // Make a direct-map page table for the kernel.
 pagetable_t
@@ -346,6 +347,7 @@ copy_mappings(pagetable_t old, pagetable_t new, uint64 sz) {
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
+    count(pa);
     if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       goto err;
     }

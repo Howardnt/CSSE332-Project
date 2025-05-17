@@ -732,7 +732,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
    // Copy user memory from parent to child. // same as fork
 
   
-  if (uvmcopy(p->pagetable, np->pagetable, p->sz) < 0) {
+  if (copy_mappings(p->pagetable, np->pagetable, p->sz) < 0) {
     printf("copy_mappings failed");
     freeproc(np);
     release(&np->lock);
@@ -743,7 +743,8 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
-
+    
+  np->trapframe->a0 = (uint64)arg; // change first argument to be arg
 //  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
   uint64 stack_bottom_pa = (uint64)kalloc();
 
@@ -755,7 +756,6 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   }
   np->trapframe->sp = stack_offset - 8; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
-  np->trapframe->a0 = (uint64)arg; // change first argument to be arg
   np->sz += PGSIZE; //fix for milestone 3
 
   // increment reference counts on open file descriptors.
@@ -794,7 +794,7 @@ int
 thread_combine(thread_struct_t *ts)
 {
   struct proc *pp;
-  int havekids, tpid, pid;
+  int tpid;
   struct proc *p = myproc();
 
   copyin(p->pagetable, (char *)&tpid, (uint64)ts, sizeof(tpid));
@@ -802,37 +802,31 @@ thread_combine(thread_struct_t *ts)
 
   acquire(&wait_lock);
 
-  for(;;){
     // Scan through table looking for exited children.
-    havekids = 0;
     for(pp = proc; pp < &proc[NPROC]; pp++){
       if(pp->parent == p && pp->pid == tpid) {
-        printf("found it\n");
-        // make sure the child isn't still in exit() or swtch().
-        acquire(&pp->lock);
+	printf("found it\n");
+	while (1) {
+	    // make sure the child isn't still in exit() or swtch().
+	    acquire(&pp->lock);
 
-        havekids = 1;
-        if(pp->state == ZOMBIE) {
-          pid = pp->pid;
-          pid = pid;
-         // freeproc(pp); // TODO do correctly
-          release(&pp->lock);
-          release(&wait_lock);
+	    if(pp->state == ZOMBIE) {
+	    freeproc(pp); // TODO do correctly
+	      release(&pp->lock);
+	      release(&wait_lock);
 
-          return 0;
-        }
-        release(&pp->lock);
+	      return 0;
+	    }
+	    release(&pp->lock);
+
+	    if(killed(p)){
+	      release(&wait_lock);
+	      return -1;
+	    }
+	    // Wait for a child to exit.
+	    sleep(p, &wait_lock);  //DOC: wait-sleep
+	}
       }
     }
-
-    // No point waiting if we don't have any children.
-    if(!havekids || killed(p)){
-      release(&wait_lock);
-      return -1;
-    }
-    
-    // Wait for a child to exit.
-    sleep(p, &wait_lock);  //DOC: wait-sleep
-    return 0;
-  }
+  return -1;
 }
