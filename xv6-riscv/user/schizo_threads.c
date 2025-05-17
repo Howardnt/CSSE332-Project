@@ -15,7 +15,7 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
     printf("error: Encountered error calling thread create %d\n", err);
     return err;
   }
-  return 1; // TODO
+  return 0; // TODO
 }
 
 int sthread_join(sthread_t *thread) {
@@ -30,7 +30,7 @@ int sthread_join(sthread_t *thread) {
     printf("error: Encountered error calling thread combine %d\n", err);
     return err;
   }
-  return 1;
+  return 0;
 }
 
 void test_fn_1(void *arg) {
@@ -105,22 +105,23 @@ int test4() {
   return 0;
 }
 
-int test_fn_5(void *arg){
-    int a = *((int *)arg);
-    printf("%d\n", a);
+void test_fn_5(void *arg){
+    printf("started\n");
+    sleep(100);
+    printf("ended\n");
     return;
 }
 
 int test5() {
     sthread_t t1;
-    int add = 12;
-    sthread_create(&t1, test_fn_5, &add);
-    sleep(10);
+    sthread_create(&t1, test_fn_5, 0);
+    printf("got here\n");
     sthread_join(&t1);
+    printf("done\n");
     return 0;
 }
 
 int main() {
-  test2();
+  test5();
   return 0; // dummy main
 }

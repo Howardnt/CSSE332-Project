@@ -747,7 +747,10 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 
   int stack_offset = PGSIZE+highest_stack_of_peers(p);
   int err = mappages(np->pagetable, stack_offset, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
-  printf("err: %d\n", err);
+  if (err != 0) {
+    printf("mappages failed\n");
+    return err;
+  }
   np->trapframe->sp = stack_offset - 8; // change stack pointer // T
   np->trapframe->epc = (uint64)fn; // change pc // TODO double check
   np->sz += PGSIZE; //fix for milestone 3
@@ -791,30 +794,31 @@ thread_combine(thread_struct_t *ts)
   int havekids, pid;
   struct proc *p = myproc();
 
+  copyin(p->pagetable, (char *)&pid, (uint64)ts, sizeof(pid));
+  printf("combining on %d\n", pid);
+
   acquire(&wait_lock);
 
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
     for(pp = proc; pp < &proc[NPROC]; pp++){
-      if(pp->parent == p){
+      if(pp->parent == p && pp->pid == pid) {
+        printf("found it\n");
         // make sure the child isn't still in exit() or swtch().
         acquire(&pp->lock);
 
         havekids = 1;
-        if(pp->state == ZOMBIE && pp->pid == ts.pid){
-          // Found one.
-          pid = pp->pid;
+        if(pp->state == ZOMBIE) {
           if(*ts != 0 && copyout(p->pagetable, *ts, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
             release(&wait_lock);
             return -1;
           }
-          freeproc(pp);
+          // freeproc(pp); // TODO do correctly
           release(&pp->lock);
           release(&wait_lock);
-          return pid;
         }
         release(&pp->lock);
       }
@@ -828,7 +832,6 @@ thread_combine(thread_struct_t *ts)
     
     // Wait for a child to exit.
     sleep(p, &wait_lock);  //DOC: wait-sleep
+    return 0;
   }
-  printf("Called with addr = %p\n", ts);
-  return 0;
 }
