@@ -68,15 +68,17 @@ void test_fn_3(void *arg) {
   exit(0);
 }
 
+
 #define TEST_3_CNT 10
+int ids[TEST_3_CNT];
 int test3() {
   sthread_t ts[TEST_3_CNT];
-  int ids[TEST_3_CNT];
   for (int i = 0; i < TEST_3_CNT; i++) {
     ids[i] = i+1;
     sthread_create(&ts[i], test_fn_3, &ids[i]);
     printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
   }
+  sleep(100);
   return 0;
 }
 

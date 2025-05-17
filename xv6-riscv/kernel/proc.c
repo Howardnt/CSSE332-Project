@@ -123,6 +123,7 @@ allocproc(void)
 
 found:
   p->pid = allocpid();
+  p->is_thread = 0;
   p->state = USED;
   p->next_peer = p;
 
@@ -727,11 +728,10 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   if((np = allocproc()) == 0){
     return -1;
   }
+  np->is_thread = 1;
 
 
-   // Copy user memory from parent to child. // same as fork
-
-  
+  // Copy user memory from parent to child. // same as fork 
   if (copy_mappings(p->pagetable, np->pagetable, p->sz) < 0) {
     printf("copy_mappings failed");
     freeproc(np);
@@ -745,6 +745,8 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   *(np->trapframe) = *(p->trapframe);
     
   np->trapframe->a0 = (uint64)arg; // change first argument to be arg
+
+  np->trapframe->epc = (uint64)fn; // change pc // TODO double check
 //  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
   uint64 stack_bottom_pa = (uint64)kalloc();
 
@@ -755,7 +757,6 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
     return err;
   }
   np->trapframe->sp = stack_offset - 8; // change stack pointer // T
-  np->trapframe->epc = (uint64)fn; // change pc // TODO double check
   np->sz += PGSIZE; //fix for milestone 3
 
   // increment reference counts on open file descriptors.
