@@ -101,11 +101,11 @@ sys_thread_create(void)
 uint64
 sys_thread_combine(void)
 {
-  uint64 addr;
+  uint64 ts;
 
-  argaddr(0, &addr);
+  argaddr(0, &ts);
 
-  return thread_combine((void*)addr);
+  return thread_combine((void*)ts);
 }
 
 // return how many clock tick interrupts have occurred

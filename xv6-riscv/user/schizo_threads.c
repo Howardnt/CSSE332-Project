@@ -116,8 +116,7 @@ int test5() {
     sthread_t t1;
     sthread_create(&t1, test_fn_5, 0);
     printf("got here\n");
-    int i;
-    wait(&i);
+    sthread_join(&t1);
     printf("done\n");
     return 0;
 }

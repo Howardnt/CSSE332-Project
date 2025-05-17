@@ -791,7 +791,7 @@ int
 thread_combine(thread_struct_t *ts)
 {
   struct proc *pp;
-  int havekids, pid, tpid;
+  int havekids, tpid, pid;
   struct proc *p = myproc();
 
   copyin(p->pagetable, (char *)&tpid, (uint64)ts, sizeof(tpid));
@@ -811,6 +811,7 @@ thread_combine(thread_struct_t *ts)
         havekids = 1;
         if(pp->state == ZOMBIE) {
           pid = pp->pid;
+          pid = pid;
           if(*ts != 0 && copyout(p->pagetable, *ts, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -820,7 +821,7 @@ thread_combine(thread_struct_t *ts)
           // freeproc(pp); // TODO do correctly
           release(&pp->lock);
           release(&wait_lock);
-          return pid;
+          return 0;
         }
         release(&pp->lock);
       }
