@@ -707,7 +707,6 @@ uint64 highest_stack_of_peers(struct proc *p) {
 
 
 
-
 // our thread implementation
 // create thread 
 //
@@ -719,7 +718,6 @@ uint64 highest_stack_of_peers(struct proc *p) {
 int
 thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
 {
-
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
@@ -746,18 +744,13 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
     
   np->trapframe->a0 = (uint64)arg; // change first argument to be arg
 
-  np->trapframe->epc = (uint64)fn; // change pc // TODO double check
-//  uvmunmap(np->pagetable, PGROUNDDOWN(np->trapframe->sp), 1, 0); // def dont free
-  uint64 stack_bottom_pa = (uint64)kalloc();
+  np->trapframe->epc = (uint64)fn; // change pc
 
+  uint64 stack_bottom_pa = (uint64)kalloc();
   int stack_offset = PGSIZE+highest_stack_of_peers(p);
-  int err = mappages(np->pagetable, stack_offset, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U); // TODO fix
-  if (err != 0) {
-    printf("mappages failed\n");
-    return err;
-  }
-  np->trapframe->sp = stack_offset - 8; // change stack pointer // T
-  np->sz += PGSIZE; //fix for milestone 3
+  mappages(np->pagetable, stack_offset, PGSIZE, stack_bottom_pa, PTE_W|PTE_R|PTE_X|PTE_U);
+  np->trapframe->sp = stack_offset - 4; // change stack pointer
+  np->sz += PGSIZE;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -785,9 +778,9 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg)
   np->state = RUNNABLE;
   release(&np->lock);
 
-  printf("END");
   copyout(p->pagetable, (uint64)ts, (char *)&pid, sizeof(pid));
   return 0; // no error
+  printf("if you are seeing me, we have a problem\n");
 }
 
 
@@ -806,13 +799,12 @@ thread_combine(thread_struct_t *ts)
     // Scan through table looking for exited children.
     for(pp = proc; pp < &proc[NPROC]; pp++){
       if(pp->parent == p && pp->pid == tpid) {
-	printf("found it\n");
 	while (1) {
 	    // make sure the child isn't still in exit() or swtch().
 	    acquire(&pp->lock);
 
 	    if(pp->state == ZOMBIE) {
-	    freeproc(pp); // TODO do correctly
+	      freeproc(pp);
 	      release(&pp->lock);
 	      release(&wait_lock);
 
