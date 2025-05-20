@@ -85,13 +85,14 @@ int test4() {
   int add2 = 23;
   sthread_create(&t1, test_fn_4, &add1, malloc(4096));
   sthread_create(&t2, test_fn_4, &add2, malloc(4096));
-  sleep(100);
+  sthread_join(&t1);
+  sthread_join(&t2);
   printf("%d\n", global);
   return 0;
 }
 
 
 int main() {
-  test3();
+  test4();
   return 0; // dummy main
 }
