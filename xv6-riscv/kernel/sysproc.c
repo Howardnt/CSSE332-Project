@@ -94,7 +94,7 @@ sys_thread_create(void)
   argaddr(1, &fn);
   argaddr(2, &args);
   argaddr(3, &stack);
-  printf("%p %p %p %p\n", ts, fn, args, stack);
+//  printf("%p %p %p %p\n", ts, fn, args, stack);
 
   return thread_create((thread_struct_t *)ts, (thread_func_t)fn, (void*)args, (void *)stack);
 }

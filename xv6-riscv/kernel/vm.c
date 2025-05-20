@@ -352,7 +352,6 @@ copy_mappings(pagetable_t old, pagetable_t new, uint64 sz) {
       goto err;
     }
   }
-  printf("---all good\n");
   return 0;
 
  err:

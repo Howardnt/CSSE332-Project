@@ -6,6 +6,9 @@
 #include "proc.h"
 #include "defs.h"
 
+#define DEBUG_ON 1
+#define debug(...) if (DEBUG_ON) printf("(carrot) " __VA_ARGS__)
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -722,6 +725,8 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
   struct proc *np;
   struct proc *p = myproc();
 
+  debug("thread_create(%p, %p, %p, %p)\n", ts, fn, arg, stack);
+
   // Allocate process. // same as fork
   if((np = allocproc()) == 0){
     return -1;
@@ -788,7 +793,7 @@ thread_combine(thread_struct_t *ts)
   struct proc *p = myproc();
 
   copyin(p->pagetable, (char *)&tpid, (uint64)ts, sizeof(tpid));
-  printf("combining on %d\n", tpid);
+  debug("combining on %d\n", tpid);
 
   acquire(&wait_lock);
 
