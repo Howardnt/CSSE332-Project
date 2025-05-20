@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   printf("THREAD_CREATE TEST:\n");
   uint64 t = 0xabcdefab;
   uint64 a = 0xbafedcba;
-  thread_create((void*)t, (void*)p, (void*)a);
+  thread_create((void*)t, (void*)p, (void*)a, (void*)malloc(4096));
 
   printf("THREAD_COMBINE TEST:\n");
   thread_combine((void*)t);

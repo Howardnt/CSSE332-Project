@@ -9,8 +9,8 @@ typedef void(*sthread_fn_in_t)(void *);
 
 
 
-int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args) {
-  int err = thread_create(thread, fn, args); // (syscall) 
+int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack) {
+  int err = thread_create(thread, fn, args, stack); // (syscall) 
   // printf("here\n");
   if (err != 0) {
     printf("error: Encountered error calling thread create %d %d\n", err, *((int *)args));
@@ -40,27 +40,11 @@ int test1() {
   printf("parrot alive\n");
   sthread_t t1;
   int local = 1234;
-  sthread_create(&t1, test_fn_1, &local);
+  sthread_create(&t1, test_fn_1, &local, malloc(4096));
   printf("parrot alive\n");
   return 0;
 }
 
-void test_fn_2(void *arg) {
-  int a = 10*(*(int*)arg);
-  sleep(a);
-  printf("thread %d ended\n", a);
-  exit(0);
-}
-
-int test2() {
-  sthread_t t1;
-  sthread_t t2;
-  int id1 = 3;
-  int id2 = 5;
-  sthread_create(&t1, test_fn_2, &id1);
-  sthread_create(&t2, test_fn_2, &id2);
-  return 0;
-}
 
 void test_fn_3(void *arg) {
   sleep(2 * *((int *)arg));
@@ -75,10 +59,12 @@ int test3() {
   int ids[TEST_3_CNT];
   for (int i = 0; i < TEST_3_CNT; i++) {
     ids[i] = i+1;
-    sthread_create(&ts[i], test_fn_3, &ids[i]);
+    sthread_create(&ts[i], test_fn_3, &ids[i], malloc(4096));
     printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
   }
-  sleep(100);
+  for (int i = 0; i < TEST_3_CNT; i++) {
+    sthread_join(&ts[i]);
+  }
   return 0;
 }
 
@@ -97,29 +83,13 @@ int test4() {
   sthread_t t2;
   int add1 = 13;
   int add2 = 23;
-  sthread_create(&t1, test_fn_4, &add1);
-  sthread_create(&t2, test_fn_4, &add2);
+  sthread_create(&t1, test_fn_4, &add1, malloc(4096));
+  sthread_create(&t2, test_fn_4, &add2, malloc(4096));
   sleep(100);
   printf("%d\n", global);
   return 0;
 }
 
-void test_fn_5(void *arg){
-//    printf("started\n");
-    sleep(40);
-//    printf("ended\n");
-    exit(1);
-}
-
-int test5() {
-    sthread_t t1;
-    sthread_create(&t1, test_fn_5, 0);
-    printf("got here\n");
-    while(1);
-    sthread_join(&t1);
-    printf("done\n");
-    return 0;
-}
 
 int main() {
   test3();

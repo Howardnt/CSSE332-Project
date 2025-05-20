@@ -113,7 +113,7 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 uint64          spoon(void*);
 
-int 		thread_create(thread_struct_t *ts, thread_func_t fn, void *arg);
+int 		thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack);
 int             thread_combine(thread_struct_t *ts);
 
 // swtch.S
