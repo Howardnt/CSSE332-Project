@@ -717,6 +717,13 @@ uint64 highest_stack_of_peers(struct proc *p) {
 //typedef void (*thread_func_t)(void *);
 //typedef int thread_struct_t;
 
+void thread_ret(){
+    release(&myproc()->lock);
+    uint64 retval = myproc()->trapframe->a0;
+    debug("here: %d %d\n", myproc()->pid, retval);
+    usertrapret();
+    exit(0);
+}
 
 int
 thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
@@ -752,6 +759,9 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
   np->trapframe->epc = (uint64)fn; // change pc
 
   np->trapframe->sp = (uint64)stack; // change stack pointer
+  
+  //np->trapframe->ra = (uint64)thread_ret;
+  np->context.ra = (uint64)thread_ret;
 
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)

@@ -7,7 +7,10 @@ typedef int sthread_t;
 typedef void(*sthread_fn_in_t)(void *);
 
 
-
+void* quick_stack(){
+    void *ptr = malloc(4096);
+    return ptr + 4096 - 4;
+}
 
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack) {
   int err = thread_create(thread, fn, args, stack); // (syscall) 
@@ -49,7 +52,7 @@ int test1() {
 void test_fn_3(void *arg) {
   sleep(2 * *((int *)arg));
   printf("(chilled) thread_num: %d pid: %d\n", *((int *)arg), getpid());
-  exit(0);
+  return;
 }
 
 
@@ -59,7 +62,7 @@ int test3() {
   int ids[TEST_3_CNT];
   for (int i = 0; i < TEST_3_CNT; i++) {
     ids[i] = i+1;
-    sthread_create(&ts[i], test_fn_3, &ids[i], malloc(4096));
+    sthread_create(&ts[i], test_fn_3, &ids[i], quick_stack());
     printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
   }
   for (int i = 0; i < TEST_3_CNT; i++) {
@@ -83,8 +86,8 @@ int test4() {
   sthread_t t2;
   int add1 = 13;
   int add2 = 23;
-  sthread_create(&t1, test_fn_4, &add1, malloc(4096));
-  sthread_create(&t2, test_fn_4, &add2, malloc(4096));
+  sthread_create(&t1, test_fn_4, &add1, quick_stack());
+  sthread_create(&t2, test_fn_4, &add2, quick_stack());
   sthread_join(&t1);
   sthread_join(&t2);
   printf("%d\n", global);
@@ -93,6 +96,6 @@ int test4() {
 
 
 int main() {
-  test4();
+  test3();
   return 0; // dummy main
 }
