@@ -109,6 +109,12 @@ sys_thread_combine(void)
   return thread_combine((void*)ts);
 }
 
+uint64
+sys_thread_exit(void)
+{
+    return thread_exit();
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 uint64

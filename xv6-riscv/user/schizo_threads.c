@@ -32,11 +32,17 @@ int sthread_join(sthread_t *thread) {
   return 0;
 }
 
+int sthread_exit(){
+    thread_exit();
+    return 0;
+}
+
+
 void test_fn_1(void *arg) {
   sleep(1);
   printf("thread_called w/ %d\n", *(int *)arg);
-  exit(1);
-//  return;
+  sthread_exit();
+  return;
 }
 
 int test1() {
@@ -52,6 +58,8 @@ int test1() {
 void test_fn_3(void *arg) {
   sleep(2 * *((int *)arg));
   printf("(chilled) thread_num: %d pid: %d\n", *((int *)arg), getpid());
+  sthread_exit();
+  exit(0);
   return;
 }
 
@@ -67,6 +75,7 @@ int test3() {
   }
   for (int i = 0; i < TEST_3_CNT; i++) {
     sthread_join(&ts[i]);
+    printf("back from join!\n");
   }
   return 0;
 }
@@ -78,7 +87,8 @@ void test_fn_4(void *arg) {
   sleep(add_to_global);
   printf("%d\n", global);
   global += add_to_global;
-  exit(0);
+  sthread_exit();
+  return;
 }
 
 int test4() {
@@ -96,6 +106,6 @@ int test4() {
 
 
 int main() {
-  test3();
+  test1();
   return 0; // dummy main
 }

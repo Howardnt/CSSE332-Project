@@ -698,7 +698,6 @@ spoon(void *arg)
 }
 
 
-
 uint64 highest_stack_of_peers(struct proc *p) {
   uint64 highest = PGROUNDDOWN(p->trapframe->sp);
   for (struct proc *cur = p->next_peer; cur != p; cur = cur->next_peer) {
@@ -716,14 +715,6 @@ uint64 highest_stack_of_peers(struct proc *p) {
 // These are now in defs.h (should they be???)
 //typedef void (*thread_func_t)(void *);
 //typedef int thread_struct_t;
-
-void thread_ret(){
-    release(&myproc()->lock);
-    uint64 retval = myproc()->trapframe->a0;
-    debug("here: %d %d\n", myproc()->pid, retval);
-    usertrapret();
-    exit(0);
-}
 
 int
 thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
@@ -833,4 +824,16 @@ thread_combine(thread_struct_t *ts)
       }
     }
   return -1;
+}
+
+int
+thread_exit(void){
+    
+    struct proc *p = myproc();
+    p->state = ZOMBIE;
+    wakeup(p->parent);
+    
+    acquire(&p->lock);
+    sched();
+    return 0;
 }

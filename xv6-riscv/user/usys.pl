@@ -39,3 +39,4 @@ entry("sleep");
 entry("uptime");
 entry("thread_create");
 entry("thread_combine");
+entry("thread_exit");
