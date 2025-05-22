@@ -149,6 +149,3 @@ int test5(){
     return 0;
 }
 
-int main() {
-  return 0;
-}

@@ -1,4 +1,4 @@
-#include "user/schizo_threads.h"
+#include "user/schizo_threads.c"
 #include "user/user.h"
 
 #define SUCCESS 1
@@ -6,22 +6,40 @@
 
 //#define EXPECT(run, result)
 
+void thread_creation(void *arg){
+  sleep(10);
+  printf("thread %d: I have been created with argument: %d\n", getpid(), *((int *)arg));
+  thread_exit(0);
+  printf("do I get here?\n");
+  return;
+}
+
+int thread_creation_test(){
+  void* ptr = malloc(4096);
+  sthread_t ts;
+  uint64 arg = 4;
+
+  printf("Thread is being created with argument: %d\n", arg);
+  sthread_create(&ts, thread_creation, &arg, ptr);
+  printf("Thread %d is being joined\n", ts);
+  sthread_join(&ts);
+  free(ptr);
+  return SUCCESS;
+}
 
 void factorial(void *arg) {
-  num = *arg;
+  uint64 num = (uint64)arg;
+  num++;
+  return;
 }
 
 int factorial_test() {
-  
+  return 0;
 }
-
-
-
-
 
 typedef int (*test_fn_t)();
 
-test_fn_t tests[] = {};
+test_fn_t tests[] = {thread_creation_test};
 int num_tests = sizeof(tests)/sizeof(test_fn_t);
 
 char *line = "----------------------------\n";
