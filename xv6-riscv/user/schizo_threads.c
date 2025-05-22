@@ -104,8 +104,48 @@ int test4() {
   return 0;
 }
 
+int *p = (int *)0xdeadbeef;
+
+void test_fn_5(void *arg) {
+    p = (int*)sbrk(4096);
+
+    p[0] = 3;
+    p[1] = 2;
+    
+    printf("%d %d %d\n", p, p[0], p[1]);
+    sthread_exit();
+    return;
+}
+
+void test_fn_5_2(void *arg){
+    if (p == (int*)0xdeadbeef){
+	printf("Failed a\n");
+	sthread_exit();
+	return;
+    }
+
+    if (p[0] == 3 && p[1] == 2){
+	printf("Success\n");
+    } else {
+	printf("Failed %d %d %d\n", p[0], p[1], p);
+    }
+
+    sthread_exit();
+    return;
+}
+
+int test5(){
+    sthread_t t1;
+    sthread_t t2;
+
+    sthread_create(&t1, test_fn_5, 0, quick_stack());
+    sthread_join(&t1);
+    sthread_create(&t2, test_fn_5_2, 0, quick_stack());
+    sthread_join(&t2);
+    return 0;
+}
 
 int main() {
-  test1();
+  test5();
   return 0; // dummy main
 }

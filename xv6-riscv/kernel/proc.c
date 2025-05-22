@@ -266,7 +266,6 @@ growproc(int n)
 {
   uint64 sz;
   struct proc *p = myproc();
-
   sz = p->sz;
   if(n > 0){
     if((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
@@ -275,7 +274,21 @@ growproc(int n)
   } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
+  uint64 va = p->sz;
   p->sz = sz;
+  uint64 pa = walkaddr(p->pagetable, va);
+    
+  for (struct proc* cur = p->next_peer; cur != p; cur = cur->next_peer){
+    if (n > 0){
+	mappages(cur->pagetable, va, n, pa, PTE_W | PTE_R | PTE_U);
+	cur->sz = sz;
+    } else if (n < 0) {
+	uvmunmap(cur->pagetable, va, n/PGSIZE, 0);
+	cur->sz = sz;
+    }
+    debug("%d\n", walkaddr(cur->pagetable, p->sz));
+  }
+
   return 0;
 }
 
@@ -707,8 +720,6 @@ uint64 highest_stack_of_peers(struct proc *p) {
   return highest;
 }
 
-
-
 // our thread implementation
 // create thread 
 //
@@ -751,9 +762,6 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
 
   np->trapframe->sp = (uint64)stack; // change stack pointer
   
-  //np->trapframe->ra = (uint64)thread_ret;
-  np->context.ra = (uint64)thread_ret;
-
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
