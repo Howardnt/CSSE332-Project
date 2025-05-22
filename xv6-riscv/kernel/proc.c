@@ -837,10 +837,11 @@ thread_combine(thread_struct_t *ts)
 }
 
 int
-thread_exit(void){
+thread_exit(void *retval){
     
     struct proc *p = myproc();
     p->state = ZOMBIE;
+    p->retval = (uint64)retval;
     wakeup(p->parent);
     
     acquire(&p->lock);

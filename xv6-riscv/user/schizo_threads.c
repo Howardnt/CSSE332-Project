@@ -20,8 +20,8 @@ int sthread_join(sthread_t *thread) {
   return 0;
 }
 
-int sthread_exit(){
-    thread_exit();
+int sthread_exit(void* retval){
+    thread_exit(retval);
     return 0;
 }
 
@@ -29,7 +29,7 @@ int sthread_exit(){
 void test_fn_1(void *arg) {
   sleep(1);
   printf("thread_called w/ %d\n", *(int *)arg);
-  sthread_exit();
+  sthread_exit(0);
   return;
 }
 
@@ -50,7 +50,7 @@ int test1() {
 void test_fn_3(void *arg) {
   sleep(2 * *((int *)arg));
   printf("(chilled) thread_num: %d pid: %d\n", *((int *)arg), getpid());
-  sthread_exit();
+  sthread_exit(0);
   exit(0);
   return;
 }
@@ -82,7 +82,7 @@ void test_fn_4(void *arg) {
   sleep(add_to_global);
   printf("%d\n", global);
   global += add_to_global;
-  sthread_exit();
+  sthread_exit(0);
   return;
 }
 
@@ -112,14 +112,14 @@ void test_fn_5(void *arg) {
     p[1] = 2;
     
     printf("thread 1 sees: %p %d %d\n", p, p[0], p[1]);
-    sthread_exit();
+    sthread_exit(0);
     return;
 }
 
 void test_fn_5_2(void *arg){
     if (p == (int*)0xdeadbeef){
 	printf("Failed a\n");
-	sthread_exit();
+	sthread_exit(0);
 	return;
     }
 
@@ -129,7 +129,7 @@ void test_fn_5_2(void *arg){
 	printf("Failed | thread 2 sees: %p %d %d\n", p, p[0], p[1]);
     }
 
-    sthread_exit();
+    sthread_exit(0);
     return;
 }
 
