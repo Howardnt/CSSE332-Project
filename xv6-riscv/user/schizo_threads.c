@@ -1,10 +1,4 @@
-#include "kernel/param.h"
-#include "kernel/types.h"
-#include "kernel/stat.h"
-#include "user/user.h"
-
-typedef int sthread_t;
-typedef void(*sthread_fn_in_t)(void *);
+#include "user/schizo_threads.h"
 
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack) {
   int err = thread_create(thread, fn, args, stack); // (syscall) 
