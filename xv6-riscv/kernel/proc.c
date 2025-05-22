@@ -819,7 +819,7 @@ thread_combine(thread_struct_t *ts)
 	      freeproc(pp);
 	      release(&pp->lock);
 	      release(&wait_lock);
-	      return p->retval;
+	      return pp->retval;
 	    }
 	    release(&pp->lock);
 
@@ -847,6 +847,8 @@ thread_exit(void *retval){
     p->state = ZOMBIE;
     p->retval = (uint64)retval;
     wakeup(p->parent);
+
+    printf("%d\n", p->retval);
 
     remove_from_peers(p);
 

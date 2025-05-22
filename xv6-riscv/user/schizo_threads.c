@@ -12,14 +12,10 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stac
   return 0; // TODO
 }
 
-int sthread_join(sthread_t *thread) {
+uint64 sthread_join(sthread_t *thread) {
   // TODO check status so we can add retvals as feature
-  int err = thread_combine(thread); // (syscall)
-  if (err != 0){
-    printf("error: Encountered error calling thread combine %d\n", err);
-    return err;
-  }
-  return 0;
+  uint64 result = thread_combine(thread); // (syscall)
+  return result;
 }
 
 int sthread_exit(void* retval){

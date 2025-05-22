@@ -130,7 +130,7 @@ int propagation_update_test(){
 void factorial(void *arg) {
   uint64 num = *(uint64 *)arg;
   printf("arg: %d\n", num);
-  if (num == 1) {
+  if (num == 0) {
     thread_exit((void *)1);
     return;
   } else {
