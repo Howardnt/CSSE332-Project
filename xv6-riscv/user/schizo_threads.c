@@ -6,12 +6,6 @@
 typedef int sthread_t;
 typedef void(*sthread_fn_in_t)(void *);
 
-
-void* quick_stack(){
-    void *ptr = malloc(4096);
-    return ptr + 4096 - 4;
-}
-
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack) {
   int err = thread_create(thread, fn, args, stack); // (syscall) 
   // printf("here\n");
@@ -49,8 +43,12 @@ int test1() {
   printf("parrot alive\n");
   sthread_t t1;
   int local = 1234;
-  sthread_create(&t1, test_fn_1, &local, malloc(4096));
+  void* ptr = malloc(4096);
+  sthread_create(&t1, test_fn_1, &local, ptr);
   printf("parrot alive\n");
+  sthread_join(&t1);
+  free(ptr);
+
   return 0;
 }
 
@@ -68,13 +66,16 @@ void test_fn_3(void *arg) {
 int test3() {
   sthread_t ts[TEST_3_CNT];
   int ids[TEST_3_CNT];
+  void* ptrs[TEST_3_CNT];
   for (int i = 0; i < TEST_3_CNT; i++) {
     ids[i] = i+1;
-    sthread_create(&ts[i], test_fn_3, &ids[i], quick_stack());
+    ptrs[i] = malloc(4096);
+    sthread_create(&ts[i], test_fn_3, &ids[i], ptrs[i]);
     printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
   }
   for (int i = 0; i < TEST_3_CNT; i++) {
     sthread_join(&ts[i]);
+    free(ptrs[i]);
     printf("back from join!\n");
   }
   return 0;
@@ -96,10 +97,14 @@ int test4() {
   sthread_t t2;
   int add1 = 13;
   int add2 = 23;
-  sthread_create(&t1, test_fn_4, &add1, quick_stack());
-  sthread_create(&t2, test_fn_4, &add2, quick_stack());
+  void* ptr1 = malloc(4096);
+  void* ptr2 = malloc(4096);
+  sthread_create(&t1, test_fn_4, &add1, ptr1);
+  sthread_create(&t2, test_fn_4, &add2, ptr2);
   sthread_join(&t1);
+  free(ptr1);
   sthread_join(&t2);
+  free(ptr2);
   printf("%d\n", global);
   return 0;
 }
@@ -112,7 +117,7 @@ void test_fn_5(void *arg) {
     p[0] = 3;
     p[1] = 2;
     
-    printf("%d %d %d\n", p, p[0], p[1]);
+    printf("thread 1 sees: %d %d %d\n", p, p[0], p[1]);
     sthread_exit();
     return;
 }
@@ -127,7 +132,7 @@ void test_fn_5_2(void *arg){
     if (p[0] == 3 && p[1] == 2){
 	printf("Success\n");
     } else {
-	printf("Failed %d %d %d\n", p[0], p[1], p);
+	printf("Failed | thread 2 sees: %d %d %d\n", p, p[0], p[1]);
     }
 
     sthread_exit();
@@ -137,15 +142,19 @@ void test_fn_5_2(void *arg){
 int test5(){
     sthread_t t1;
     sthread_t t2;
-
-    sthread_create(&t1, test_fn_5, 0, quick_stack());
+    
+    void* ptr = malloc(4096);
+    void* ptr2 = malloc(4096);
+    sthread_create(&t1, test_fn_5, 0, ptr);
     sthread_join(&t1);
-    sthread_create(&t2, test_fn_5_2, 0, quick_stack());
+    free(ptr);
+    sthread_create(&t2, test_fn_5_2, 0, ptr2);
     sthread_join(&t2);
+    free(ptr2);
     return 0;
 }
 
 int main() {
-  test5();
+  test4();
   return 0; // dummy main
 }

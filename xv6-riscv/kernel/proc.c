@@ -277,16 +277,16 @@ growproc(int n)
   uint64 va = p->sz;
   p->sz = sz;
   uint64 pa = walkaddr(p->pagetable, va);
+  debug("a: %d\n", pa);
     
   for (struct proc* cur = p->next_peer; cur != p; cur = cur->next_peer){
     if (n > 0){
-	mappages(cur->pagetable, va, n, pa, PTE_W | PTE_R | PTE_U);
-	cur->sz = sz;
+	mappages(cur->pagetable, cur->sz, n, pa, PTE_W | PTE_R | PTE_U);
     } else if (n < 0) {
-	uvmunmap(cur->pagetable, va, n/PGSIZE, 0);
-	cur->sz = sz;
+	uvmunmap(cur->pagetable, cur->sz, n/PGSIZE, 0);
     }
-    debug("%d\n", walkaddr(cur->pagetable, p->sz));
+    cur->sz = sz;
+    debug("b: %d\n", walkaddr(cur->pagetable, va));
   }
 
   return 0;
@@ -760,7 +760,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
 
   np->trapframe->epc = (uint64)fn; // change pc
 
-  np->trapframe->sp = (uint64)stack; // change stack pointer
+  np->trapframe->sp = (uint64)stack + 4096 - 4; // change stack pointer
   
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -814,10 +814,10 @@ thread_combine(thread_struct_t *ts)
 	    acquire(&pp->lock);
 
 	    if(pp->state == ZOMBIE) {
+	      pp->parent->next_peer = pp->next_peer;
 	      freeproc(pp);
 	      release(&pp->lock);
 	      release(&wait_lock);
-
 	      return 0;
 	    }
 	    release(&pp->lock);
