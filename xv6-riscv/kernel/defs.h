@@ -115,7 +115,7 @@ uint64          spoon(void*);
 
 int 		thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack);
 int             thread_combine(thread_struct_t *ts);
-int             thread_exit(void);
+int             thread_exit(void* arg);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

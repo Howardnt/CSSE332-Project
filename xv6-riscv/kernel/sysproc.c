@@ -112,7 +112,10 @@ sys_thread_combine(void)
 uint64
 sys_thread_exit(void)
 {
-    return thread_exit();
+    uint64 ts;
+    argaddr(0, &ts);
+
+    return thread_exit((void*)ts);
 }
 
 // return how many clock tick interrupts have occurred
