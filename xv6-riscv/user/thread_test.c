@@ -129,7 +129,7 @@ int propagation_update_test(){
 
 void factorial(void *arg) {
   uint64 num = *(uint64 *)arg;
-  printf("arg: %d\n", num);
+  printf("thread_num: %d arg: %d\n", getpid(), num);
   if (num == 0) {
     thread_exit((void *)1);
     return;
@@ -141,7 +141,7 @@ void factorial(void *arg) {
     uint64 got = (uint64)sthread_join(&child);
     free(stack);
     uint64 res = (got*num);
-    printf("%d! = %d; %d\n", num, res, got);
+    printf("%d! = %d\n", num, res);
     thread_exit((void *)res);
     return;
   }

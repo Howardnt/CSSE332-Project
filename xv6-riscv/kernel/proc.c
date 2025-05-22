@@ -848,7 +848,6 @@ thread_exit(void *retval){
     p->retval = (uint64)retval;
     wakeup(p->parent);
 
-    printf("%d\n", p->retval);
 
     remove_from_peers(p);
 
