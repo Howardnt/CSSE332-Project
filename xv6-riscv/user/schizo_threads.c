@@ -117,7 +117,7 @@ void test_fn_5(void *arg) {
     p[0] = 3;
     p[1] = 2;
     
-    printf("thread 1 sees: %d %d %d\n", p, p[0], p[1]);
+    printf("thread 1 sees: %p %d %d\n", p, p[0], p[1]);
     sthread_exit();
     return;
 }
@@ -132,7 +132,7 @@ void test_fn_5_2(void *arg){
     if (p[0] == 3 && p[1] == 2){
 	printf("Success\n");
     } else {
-	printf("Failed | thread 2 sees: %d %d %d\n", p, p[0], p[1]);
+	printf("Failed | thread 2 sees: %p %d %d\n", p, p[0], p[1]);
     }
 
     sthread_exit();
@@ -148,6 +148,7 @@ int test5(){
     sthread_create(&t1, test_fn_5, 0, ptr);
     sthread_join(&t1);
     free(ptr);
+    printf("%p %d %d\n", p, p[0], p[1]);
     sthread_create(&t2, test_fn_5_2, 0, ptr2);
     sthread_join(&t2);
     free(ptr2);
@@ -155,6 +156,6 @@ int test5(){
 }
 
 int main() {
-  test4();
+  test5();
   return 0; // dummy main
 }

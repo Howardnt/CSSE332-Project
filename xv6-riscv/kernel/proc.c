@@ -20,6 +20,7 @@ struct spinlock pid_lock;
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
+extern void count(uint64);
 
 extern char trampoline[]; // trampoline.S
 
@@ -274,19 +275,20 @@ growproc(int n)
   } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
-  uint64 va = p->sz;
+  uint64 va = PGROUNDUP(p->sz);
   p->sz = sz;
   uint64 pa = walkaddr(p->pagetable, va);
-  debug("a: %d\n", pa);
+  debug("a: %p %p\n", pa, va);
     
   for (struct proc* cur = p->next_peer; cur != p; cur = cur->next_peer){
     if (n > 0){
-	mappages(cur->pagetable, cur->sz, n, pa, PTE_W | PTE_R | PTE_U);
+	count(pa);
+	mappages(cur->pagetable, va, n, pa, PTE_W | PTE_R | PTE_U);
     } else if (n < 0) {
-	uvmunmap(cur->pagetable, cur->sz, n/PGSIZE, 0);
+	uvmunmap(cur->pagetable, va, n/PGSIZE, 0);
     }
     cur->sz = sz;
-    debug("b: %d\n", walkaddr(cur->pagetable, va));
+    debug("b: %p\n", walkaddr(cur->pagetable, va));
   }
 
   return 0;
