@@ -114,7 +114,7 @@ void            procdump(void);
 uint64          spoon(void*);
 
 int 		thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack);
-int             thread_combine(thread_struct_t *ts);
+uint64             thread_combine(thread_struct_t *ts);
 int             thread_exit(void* arg);
 
 // swtch.S

@@ -1,5 +1,7 @@
 #include "user/schizo_threads.h"
 
+int global = 0;
+#define TEST_3_NUM 5
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack) {
   int err = thread_create(thread, fn, args, stack); // (syscall) 
   // printf("here\n");
@@ -56,27 +58,9 @@ void test_fn_3(void *arg) {
 }
 
 
-#define TEST_3_CNT 10
-int test3() {
-  sthread_t ts[TEST_3_CNT];
-  int ids[TEST_3_CNT];
-  void* ptrs[TEST_3_CNT];
-  for (int i = 0; i < TEST_3_CNT; i++) {
-    ids[i] = i+1;
-    ptrs[i] = malloc(4096);
-    sthread_create(&ts[i], test_fn_3, &ids[i], ptrs[i]);
-    printf("(parrot) thread_num %d, sthread_t %d (should match that threads pid)\n", ids[i], (int)ts[i]);
-  }
-  for (int i = 0; i < TEST_3_CNT; i++) {
-    sthread_join(&ts[i]);
-    free(ptrs[i]);
-    printf("back from join!\n");
-  }
-  return 0;
-}
+
 
 // --------- t4
-int global = 0;
 void test_fn_4(void *arg) {
   int add_to_global = *(int *)arg;
   sleep(add_to_global);

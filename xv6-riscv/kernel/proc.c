@@ -6,7 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 
-#define DEBUG_ON 1
+#define DEBUG_ON 0
 #define debug(...) if (DEBUG_ON) printf("(carrot) " __VA_ARGS__)
 
 struct cpu cpus[NCPU];
@@ -762,7 +762,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
 
   np->trapframe->epc = (uint64)fn; // change pc
 
-  np->trapframe->sp = (uint64)stack + 4096 - 4; // change stack pointer
+  np->trapframe->sp = (uint64)stack + PGSIZE - 4; // change stack pointer
   
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
@@ -796,7 +796,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
 }
 
 
-int
+uint64
 thread_combine(thread_struct_t *ts)
 {
   struct proc *pp;
@@ -816,11 +816,10 @@ thread_combine(thread_struct_t *ts)
 	    acquire(&pp->lock);
 
 	    if(pp->state == ZOMBIE) {
-	      pp->parent->next_peer = pp->next_peer;
 	      freeproc(pp);
 	      release(&pp->lock);
 	      release(&wait_lock);
-	      return 0;
+	      return p->retval;
 	    }
 	    release(&pp->lock);
 
@@ -836,13 +835,21 @@ thread_combine(thread_struct_t *ts)
   return -1;
 }
 
+void remove_from_peers(struct proc *p) {
+    struct proc *prev;
+    for (prev = p; prev->next_peer != p; prev = prev->next_peer) {}
+    prev->next_peer = p->next_peer;
+}
+
 int
 thread_exit(void *retval){
-    
     struct proc *p = myproc();
     p->state = ZOMBIE;
     p->retval = (uint64)retval;
     wakeup(p->parent);
+
+    remove_from_peers(p);
+
     
     acquire(&p->lock);
     sched();
