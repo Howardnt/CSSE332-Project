@@ -273,22 +273,22 @@ growproc(int n)
       return -1;
     }
   } else if(n < 0){
+    for (struct proc* cur = p->next_peer; cur != p; cur = cur->next_peer){
+	uvmdealloc(cur->pagetable, sz, sz + n);
+    }
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
+
   uint64 va = PGROUNDUP(p->sz);
   p->sz = sz;
   uint64 pa = walkaddr(p->pagetable, va);
-  debug("a: %p %p\n", pa, va);
     
   for (struct proc* cur = p->next_peer; cur != p; cur = cur->next_peer){
     if (n > 0){
 	count(pa);
 	mappages(cur->pagetable, va, n, pa, PTE_W | PTE_R | PTE_U);
-    } else if (n < 0) {
-	uvmunmap(cur->pagetable, va, n/PGSIZE, 0);
     }
     cur->sz = sz;
-    debug("b: %p\n", walkaddr(cur->pagetable, va));
   }
 
   return 0;

@@ -127,6 +127,58 @@ int propagation_update_test(){
     return SUCCESS;
 }
 
+void propagation_update2(void *arg) {
+    printf("(thread %d) allocating p using sbrk\n", getpid());
+    p = (int*)sbrk(4096);
+
+    printf("(thread %d) setting p[0] to 3\n", getpid());
+    p[0] = 3;
+    printf("(thread %d) setting p[1] to 2\n", getpid());
+    p[1] = 2;
+    
+    printf("(thread %d) sees p:%p p[0]:%d p[1]:%d\n", getpid(), p, p[0], p[1]);
+    sleep(6);
+
+    printf("(thread %d) deallocating p using sbrk\n", getpid());
+    p = (int*)sbrk(-4096);
+    
+    printf("(thread %d) reallocating p using sbrk\n", getpid());
+    p = (int*)sbrk(4096);
+    
+    printf("(thread %d) setting p[0] to 5\n", getpid());
+    p[0] = 5;
+    printf("(thread %d) setting p[1] to 4\n", getpid());
+    p[1] = 4;
+
+    printf("(thread %d) sees p:%p p[0]:%d p[1]:%d\n", getpid(), p, p[0], p[1]);
+    sthread_exit(0);
+    return;
+}
+
+void propagation_update2_2(void *arg){
+    sleep(2);
+    printf("(thread %d) sees p:%p p[0]:%d p[1]:%d\n", getpid(), p, p[0], p[1]);
+    sleep(10);
+    printf("(thread %d) sees p:%p p[0]:%d p[1]:%d\n", getpid(), p, p[0], p[1]);
+    sthread_exit(0);
+    return;
+}
+
+int propagation_update2_test(){
+    sthread_t t1;
+    sthread_t t2;
+    
+    void* ptr = malloc(4096);
+    void* ptr2 = malloc(4096);
+    sthread_create(&t1, propagation_update2, 0, ptr);
+    sthread_create(&t2, propagation_update2_2, 0, ptr2);
+    sthread_join(&t1);
+    free(ptr);
+    sthread_join(&t2);
+    free(ptr2);
+    return SUCCESS;
+}
+
 void factorial(void *arg) {
   uint64 num = *(uint64 *)arg;
   printf("thread_num: %d arg: %d\n", getpid(), num);
@@ -159,7 +211,7 @@ int factorial_test() {
 
 typedef int (*test_fn_t)();
 
-test_fn_t tests[] = {thread_creation_test, m_thread_creation_test, shared_memory_test, propagation_update_test, factorial_test};
+test_fn_t tests[] = {thread_creation_test, m_thread_creation_test, shared_memory_test, propagation_update_test, propagation_update2_test, factorial_test};
 int num_tests = sizeof(tests)/sizeof(test_fn_t);
 
 char *line = "----------------------------\n";

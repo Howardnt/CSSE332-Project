@@ -1,0 +1,56 @@
+Project Milestone 4
+Author(s): Atli Arnarsson, Noah Howard, Jack Traversa
+Date: 5/22/25
+---
+
+High level description
+======================
+
+In the kernel, we have added a syscall that creates a new process. This process will start executing the function pointer given to it after it has copied the page tables from its parent process. The user must supply some memory to be used as the stack for the new thread.
+
+At the user level, we have created a fairly minimal wrapper around the new syscall to make creating threads easier. It can pass in a void* argument to the function and the threads’ information is saved to an instance of the sthread_t type so that it can be used later.
+
+Processes have a linked list of all their “peers” processes which share an address space. This is important for when one thread makes an update to a page table, the update is then propagated to all other threads so they can access the new information.
+
+We also have a syscall that joins a thread, once it has been created. The user must call this thread_combine function, which waits until the thread has finished. The user must free the stack manually.
+
+Each thread must call our thread_exit() function in order to exit properly. This function can take in an argument that will become the process' return value.
+
+(M2) Thread creation
+====================
+
+We decided to take arguments as a void* which can be cast to another type if needed, but we decided not to have the call return anything (for now). To answer some of the questions from the instructions: the address where the stack starts is put into the sp register of the new process, and epc is the register that determines where the thread will start executing after creation. The argument passed in is put in a0.
+
+We also added the stack as an argument passed in, it should be at least 4096 bytes of memory that the parent assures the child is theirs and will not be messed with as long as they are alive. Threads that are created now share memory.
+
+(M3) Memory sharing
+===================
+
+We created our own version of uvmcopy called copy_mappings. Instead of allocating new memory for the page tables, it maps to the existing physical addresses of the parent process. Additionally, kalloc, kfree, and copy_mappings reference count in order to prevent early freeing and double freeing.
+
+(M4) Memory updates
+===================
+
+All of our threads are contained in a circular linked list of all the threads that are in the same address space. They still maintain the parent->child structure. We modified growproc so that everytime sbrk is called from one thread, we loop through the linked list and assign/remove virtual pointers to the physical address (using mappages or uvmunmap) of the new entry that was created (using uvmalloc) so that each thread can access the same data. This requires reference counting, which we made sure to account for. 
+
+Test cases
+===========
+
+We have several test cases that can be performed by running thread_test <test #> (or no argument to run all tests) in the xv6 shell.
+The first test case creates a thread, passing in 100 as the argument. The thread prints that it has been created and the argument it received. A success is indicated by the thread indicating that it received 100.
+The second test case creates 5 threads and joins them all.
+The third test case shows shared memory, different threads increment (+10 and +20) a shared variable (named global), and the final result is outputted. If threads are able to see the changes to the variable cased by other threads and the variable equals 30 in the end, then this test is a success.
+The fourth test case shows that memory updates propagate. One thread uses sbrk on p and assigns p[0] = 3 and p[1] = 2. This test is successful if the second thread prints that p[0] = 3 and p[1] = 2.
+The fifth test case is a more advanced version of the fourth, which shows deallocation as well. After the initial allocation, sbrk is used by thread 1 for deallocation. It is then reallocated again, this time with p[0] = 5 and p[1] = 4. This test is successful if the second thread prints that p[0] = 3 and p[1] = 2 before the deallocation, and that p[0] = 5 and p[1] = 4 after the reallocation.
+The sixth test case shows off our thread_exit function and its return values, as well as threads creating their own threads. This test case succeeds if it properly computes the factorial.
+
+Additional comments
+==================
+
+We decided to switch from a kernel stack assignment to having the user do it themselves. We thought it would simplify the implementation. (this occurred during Milestone 3)
+
+Grade
+======
+
+We believe that we should receive an A. We have devoted a lot of time towards working on this project and we have also gone to office hours to understand better the problems we were facing. As far as we are aware, our implementation works as requested, and we even have an extra feature in the retval aspect of our thread_exit function. Each of us really did try our best with this project.
+

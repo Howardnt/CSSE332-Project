@@ -51,8 +51,11 @@ kfree(void *pa)
 {
   struct run *r;
 
-  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
+  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP){
+    printf("%d\n", (uint64)pa % PGSIZE);
+    printf("%d %d\n", pa, PHYSTOP);
     panic("kfree");
+  }
   
   acquire(&kmem.lock);
   counts[FRINDEX(pa)]--;
@@ -100,5 +103,9 @@ void count(void* pa){
     acquire(&kmem.lock);
     counts[FRINDEX(pa)]++;
     release(&kmem.lock);
+}
+
+int getCount(void* pa){
+    return counts[FRINDEX(pa)];
 }
 
