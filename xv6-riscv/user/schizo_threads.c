@@ -150,6 +150,5 @@ int test5(){
 }
 
 int main() {
-  test5();
-  return 0; // dummy main
+  return 0;
 }

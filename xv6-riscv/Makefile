@@ -137,6 +137,7 @@ UPROGS=\
 	$U/_zombie\
 	$U/_xv6test\
 	$U/_schizo_threads\
+	$U/_thread_test\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
