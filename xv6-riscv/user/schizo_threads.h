@@ -12,11 +12,7 @@ typedef void(*sthread_fn_in_t)(void *);
 
 
 int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack);
-
-
 uint64 sthread_join(sthread_t *thread);
-
-
-int sthread_exit();
+int sthread_exit(void* arg);
 
 #endif // __SCHIZO_THREADS_H

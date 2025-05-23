@@ -762,7 +762,7 @@ thread_create(thread_struct_t *ts, thread_func_t fn, void *arg, void *stack)
 
   np->trapframe->epc = (uint64)fn; // change pc
 
-  np->trapframe->sp = (uint64)stack + PGSIZE - 4; // change stack pointer
+  np->trapframe->sp = (uint64)stack + PGSIZE - 4; // change stack pointer, bring to the top of the stack
   
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
