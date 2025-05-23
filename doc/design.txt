@@ -47,10 +47,13 @@ The sixth test case shows off our thread_exit function and its return values, as
 Additional comments
 ==================
 
-We decided to switch from a kernel stack assignment to having the user do it themselves. We thought it would simplify the implementation. (this occurred during Milestone 3)
+We decided to switch from a kernel stack assignment to having the user do it themselves. We thought it would simplify the implementation (this occurred during Milestone 3).
 
 Grade
 ======
 
-We believe that we should receive an A. We have devoted a lot of time towards working on this project and we have also gone to office hours to understand better the problems we were facing. As far as we are aware, our implementation works as requested, and we even have an extra feature in the retval aspect of our thread_exit function. Each of us really did try our best with this project.
+We believe that we should receive an A.
+We have devoted a lot of time towards working on this project and we have also gone to office hours to understand better the problems we were facing.
+As far as we are aware, our implementation works as requested, and we even have an extra feature in the retval aspect of our thread_exit function.
+Each of us really did try our best with this project.
 
