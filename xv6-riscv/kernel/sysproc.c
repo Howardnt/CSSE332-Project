@@ -99,7 +99,7 @@ sys_thread_create(void)
   return thread_create((thread_struct_t *)ts, (thread_func_t)fn, (void*)args, (void *)stack);
 }
 
-uint64
+uint64 // returns pointer
 sys_thread_combine(void)
 {
   uint64 ts;
