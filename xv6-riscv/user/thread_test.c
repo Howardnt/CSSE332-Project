@@ -179,6 +179,8 @@ int propagation_update2_test(){
     return SUCCESS;
 }
 
+
+// this function abuses pointers to just be ints for the return value
 void factorial(void *arg) {
   uint64 num = *(uint64 *)arg;
   printf("thread_num: %d arg: %d\n", getpid(), num);
@@ -204,7 +206,7 @@ int factorial_test() {
   void *stack = malloc(4096);
   uint64 arg = 7;
   sthread_create(&top, factorial, &arg, stack);
-  int got = sthread_join(&top);
+  uint64 got = (uint64)sthread_join(&top);
   free(stack);
   return got == 5040;
 }

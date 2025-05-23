@@ -12,10 +12,10 @@ int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stac
   return 0; // TODO
 }
 
-uint64 sthread_join(sthread_t *thread) {
+void *sthread_join(sthread_t *thread) {
   // TODO check status so we can add retvals as feature
   uint64 result = thread_combine(thread); // (syscall)
-  return result;
+  return (void *)result;
 }
 
 int sthread_exit(void* retval){

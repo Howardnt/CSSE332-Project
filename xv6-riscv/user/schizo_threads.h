@@ -10,11 +10,14 @@
 typedef int sthread_t;
 typedef void(*sthread_fn_in_t)(void *);
 
+int sthread_create(
+		sthread_t *thread, 
+		sthread_fn_in_t fn,
+		void *args, 
+		void *stack);
 
-int sthread_create(sthread_t *thread, sthread_fn_in_t fn, void *args, void *stack);
 
-
-uint64 sthread_join(sthread_t *thread);
+void *sthread_join(sthread_t *thread);
 
 
 int sthread_exit();
